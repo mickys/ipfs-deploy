@@ -42,6 +42,8 @@ IPFS_DEPLOY_CLOUDFLARE__RECORD`)
 
     const content = await updateCloudflareDnslink(api, opts)
 
+    log.info('🔗  Website URL: https://' + domain)
+
     return {
       record: opts.record,
       value: content
