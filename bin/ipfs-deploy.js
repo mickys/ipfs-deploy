@@ -157,6 +157,7 @@ async function main () {
         fs.writeFileSync(options.resultsDir+'/ipfs_hash', pinnedHash, { flag: 'a+' }, err => {})
         fs.writeFileSync(options.resultsDir+'/domain', options.siteDomain, { flag: 'a+' }, err => {})
         fs.writeFileSync(options.resultsDir+'/results.json', JSON.stringify(results), { flag: 'a+' }, err => {})
+        fs.writeFileSync(options.resultsDir+'/telegram_message', "URL: https://"+options.siteDomain+ " deployed and pinned to IPFS hash " + pinnedHash, { flag: 'a+' }, err => {})
       }
       // process.stdout.write(pinnedHash + '\n')
     } else {
