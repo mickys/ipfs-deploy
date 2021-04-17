@@ -4,6 +4,7 @@ const colors = require('colors/safe')
 const yargs = require('yargs')
 const deploy = require('../src')
 const pkg = require('../package.json')
+const fs = require('fs')
 
 updateNotifier({ pkg, updateCheckInterval: 0 }).notify()
 
@@ -57,6 +58,10 @@ const argv = yargs
             alias: 'unique-upload',
             choices: pinProviders,
             describe: 'Upload to only one service and pin hash on others'
+          },
+          f: {
+            alias: 'dir',
+            describe: 'directory where to save IPFS hash / DNS domain name and results.json'
           }
         })
         .example(
@@ -88,58 +93,87 @@ const argv = yargs
   .argv
 
 async function main () {
-  const options = {
-    publicDirPath: argv.path,
-    copyHttpGatewayUrlToClipboard:
-      !(argv.clipboard === false) && !argv.C && !argv.noClipboard,
-    open: !(argv.open === false) && !argv.O && !argv.noOpen,
-    remotePinners: argv.pinner,
-    dnsProviders: argv.dns,
-    siteDomain: argv.siteDomain,
-    uniqueUpload: argv.uniqueUpload,
-    credentials: {
-      cloudflare: {
-        apiKey: argv.cloudflare && argv.cloudflare.apiKey,
-        apiToken: argv.cloudflare && argv.cloudflare.apiToken,
-        apiEmail: argv.cloudflare && argv.cloudflare.apiEmail,
-        zone: argv.cloudflare && argv.cloudflare.zone,
-        record: argv.cloudflare && argv.cloudflare.record
+  try {
+    const options = {
+      publicDirPath: argv.path,
+      copyHttpGatewayUrlToClipboard:
+        !(argv.clipboard === false) && !argv.C && !argv.noClipboard,
+      open: !(argv.open === false) && !argv.O && !argv.noOpen,
+      remotePinners: argv.pinner,
+      dnsProviders: argv.dns,
+      siteDomain: argv.siteDomain,
+      uniqueUpload: argv.uniqueUpload,
+      credentials: {
+        cloudflare: {
+          apiKey: argv.cloudflare && argv.cloudflare.apiKey,
+          apiToken: argv.cloudflare && argv.cloudflare.apiToken,
+          apiEmail: argv.cloudflare && argv.cloudflare.apiEmail,
+          zone: argv.cloudflare && argv.cloudflare.zone,
+          record: argv.cloudflare && argv.cloudflare.record
+        },
+        dnsimple: {
+          token: argv.dnsimple && argv.dnsimple.token,
+          zone: argv.dnsimple && argv.dnsimple.zone,
+          record: argv.dnsimple && argv.dnsimple.record
+        },
+        pinata: {
+          apiKey: argv.pinata && argv.pinata.apiKey,
+          secretApiKey: argv.pinata && argv.pinata.secretApiKey
+        },
+        ipfsCluster: {
+          host: argv.ipfsCluster && argv.ipfsCluster.host,
+          username: argv.ipfsCluster && argv.ipfsCluster.username,
+          password: argv.ipfsCluster && argv.ipfsCluster.password
+        },
+        fission: {
+          username: argv.fission && argv.fission.username,
+          password: argv.fission && argv.fission.password
+        }
       },
-      dnsimple: {
-        token: argv.dnsimple && argv.dnsimple.token,
-        zone: argv.dnsimple && argv.dnsimple.zone,
-        record: argv.dnsimple && argv.dnsimple.record
-      },
-      pinata: {
-        apiKey: argv.pinata && argv.pinata.apiKey,
-        secretApiKey: argv.pinata && argv.pinata.secretApiKey
-      },
-      ipfsCluster: {
-        host: argv.ipfsCluster && argv.ipfsCluster.host,
-        username: argv.ipfsCluster && argv.ipfsCluster.username,
-        password: argv.ipfsCluster && argv.ipfsCluster.password
-      },
-      fission: {
-        username: argv.fission && argv.fission.username,
-        password: argv.fission && argv.fission.password
-      }
+      resultsDir: argv.dir
     }
-  }
 
-  if (typeof options.dnsProviders === 'string') {
-    options.dnsProviders = [options.dnsProviders]
-  }
+    if (typeof options.dnsProviders === 'string') {
+      options.dnsProviders = [options.dnsProviders]
+    }
 
-  if (typeof options.remotePinners === 'string') {
-    options.remotePinners = [options.remotePinners]
-  }
+    if (typeof options.remotePinners === 'string') {
+      options.remotePinners = [options.remotePinners]
+    }
 
-  const pinnedHash = await deploy(options)
-  if (pinnedHash) {
-    process.stdout.write(pinnedHash + '\n')
-  } else {
+    const pinnedHash = await deploy(options)
+
+    if (pinnedHash) {
+      if(options.resultsDir !== "") {
+        if (!fs.existsSync(options.resultsDir)){
+          fs.mkdirSync(options.resultsDir);
+        }
+
+        const results = {
+          ipfs_hash: pinnedHash,
+          domain: options.siteDomain,
+        };
+
+        fs.writeFileSync(options.resultsDir+'/ipfs_hash', pinnedHash, { flag: 'a+' }, err => {})
+        fs.writeFileSync(options.resultsDir+'/domain', options.siteDomain, { flag: 'a+' }, err => {})
+        fs.writeFileSync(options.resultsDir+'/results.json', JSON.stringify(results), { flag: 'a+' }, err => {})
+      }
+      // process.stdout.write(pinnedHash + '\n')
+    } else {
+      process.exit(1)
+    }
+  
+    process.exit(0)
+
+  } catch (e) {
+    console.log("error:", e);
     process.exit(1)
   }
 }
 
 main()
+
+
+
+
+

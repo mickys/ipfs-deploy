@@ -32,6 +32,7 @@ module.exports = ({ name, builder, pinDir, pinHash }) => async options => {
       } catch (error) {
         log.fail(`💔  Uploading to ${name} didn't work.`)
         logError(error)
+        throw new Error(`Uploading to ${name} didn't work.`)
         return undefined
       }
     },
@@ -49,6 +50,7 @@ module.exports = ({ name, builder, pinDir, pinHash }) => async options => {
       } catch (error) {
         log.fail(`💔  Pinning to ${name} didn't work.`)
         logError(error)
+        throw new Error(`Pinning to ${name} didn't work.`)
         return undefined
       }
     }

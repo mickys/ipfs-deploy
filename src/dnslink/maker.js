@@ -17,6 +17,7 @@ module.exports = ({ name, validate, link }) => async (
   } catch (error) {
     spinner.fail(`💔  Missing arguments for ${name} API.`)
     logError(error)
+    throw new Error(`Missing arguments for ${name} API.`)
     return
   }
 
@@ -35,5 +36,6 @@ module.exports = ({ name, validate, link }) => async (
   } catch (error) {
     spinner.fail(`💔  Updating ${name} DNS didn't work.`)
     logError(error)
+    throw new Error(`Updating ${name} DNS didn't work.`)
   }
 }
