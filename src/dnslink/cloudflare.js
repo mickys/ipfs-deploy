@@ -1,6 +1,7 @@
 const updateCloudflareDnslink = require('dnslink-cloudflare')
 const _ = require('lodash')
 const fp = require('lodash/fp')
+const { logger, logError } = require('../logging')
 
 module.exports = {
   name: 'Cloudflare',
@@ -35,6 +36,9 @@ IPFS_DEPLOY_CLOUDFLARE__RECORD`)
       record: record || `_dnslink.${domain}`,
       link: `/ipfs/${hash}`
     }
+
+    const log = logger({})
+    log.info('🔗  DNS TXT: ' + opts.record)
 
     const content = await updateCloudflareDnslink(api, opts)
 
