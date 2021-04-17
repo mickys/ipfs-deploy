@@ -1,7 +1,7 @@
 const colors = require('colors/safe')
 const _ = require('lodash')
 const { logger, logError } = require('../logging')
-const { linkCid } = require('../url-utils')
+const { linkCid, gatewayHttpUrl } = require('../url-utils')
 const white = colors.brightWhite
 
 module.exports = ({ name, builder, pinDir, pinHash }) => async options => {
@@ -25,7 +25,8 @@ module.exports = ({ name, builder, pinDir, pinHash }) => async options => {
         const hash = await pinDir(api, dir, tag)
 
         log.succeed(`📌  Added and pinned to ${name} with hash:`)
-        log.info(linkCid(hash, slug))
+        log.info('🔗  ' + hash)
+        log.info('🔗  ' + gatewayHttpUrl(hash, slug))
 
         return hash
       } catch (error) {
